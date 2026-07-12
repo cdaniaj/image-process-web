@@ -1,0 +1,241 @@
+
+/* Container pai que engloba toda a tela */
+.analysis-grid-container {
+  width: 100%;
+  background-color: #f8f6fc; /* Um tom bem claro de roxo para o fundo */
+}
+
+/* Estilização da Gaveta Lateral (Coluna do Paciente) */
+.column-side-drawer {
+  margin-top: 16px;
+  width: 320px;
+  max-width: 320px;
+  border-right: 1px solid rgba(122, 85, 255, 0.12);
+  background: #ffffff;
+  box-shadow: 4px 0 24px rgba(122, 85, 255, 0.03);
+}
+
+/* Conteúdo que sobra da tela à direita da gaveta */
+.analysis-grid-content {
+  padding: 24px 36px 36px 36px;
+  position: relative;
+  background: transparent;
+}
+
+/* Botão que abre/fecha a gaveta */
+.toggle-button-container {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.patient-title {
+  font-size: 16px;
+  padding: 18px;
+  position: relative;
+  display: block;
+  color: white;
+  background: linear-gradient(
+  135deg,
+  #7d5eff 0%,
+  #a15cff 100%);
+  font-weight: bold;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+/* O novo Grid elástico para as colunas do Meio (Imagem) e Direita (Resultados) */
+.analysis-main-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.analysis-result-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.analysis-result-row > mat-card {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.analysis-action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.column-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.column-card {
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+
+h2 {
+  color: #7d5eff;
+  margin-bottom: 8px;
+}
+
+
+/* ==========================================================================
+   3. PREVIEWS DE IMAGEM E CARDS (Seu design visual original)
+   ========================================================================== */
+
+.image-preview-card {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 18px;
+  border-radius: 16px;
+  background: #faf4ff;
+  border: 1px dashed rgba(122, 85, 255, 0.2);
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.empty-placeholder {
+  color: #8b6de4;
+  font-style: italic;
+}
+
+.file-label {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+
+/* ==========================================================================
+   4. SEÇÃO DE RESULTADOS E IA (Métricas e Relatórios)
+   ========================================================================== */
+
+.result-card {
+  min-height: 140px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 24px; /* Ajustado padding interno para alinhar com o HTML */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.result-row:last-child {
+  border-bottom: none;
+}
+
+.result-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #333;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.result-icon {
+  font-size: 20px;
+  color: #7b61ff;
+}
+
+.result-value {
+  color: #1f1f1f;
+  font-weight: 700;
+}
+
+.llm-report-card {
+  padding: 0;
+  background: #ffffff;
+  height: 300px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 1px solid rgba(122, 85, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 16px 30px rgba(122, 85, 255, 0.08);
+}
+
+.llm-report-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #7d5eff 0%, #a15cff 100%);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.llm-report-header .material-symbols-outlined {
+  font-size: 22px;
+}
+
+.llm-report-title {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.llm-report-content {
+  padding: 18px;
+  flex: 1;
+  overflow-y: auto;
+  line-height: 1.7;
+  color: #2e2e2e;
+}
+
+.llm-report-content p,
+.llm-report-content li,
+.llm-report-content span {
+  color: #333;
+}
+
+.llm-report-content ul {
+  padding-left: 1.25rem;
+}
+
+.llm-report-content li {
+  margin-bottom: 0.75rem;
+}
+
+

@@ -1,0 +1,188 @@
+<mat-drawer-container class="analysis-grid-container" style="margin-top: 24px;" autosize>
+  
+  <mat-drawer #drawer class="column-side-drawer" mode="side" opened="true">
+    <div style="width: 100%;">
+      <span class="patient-title">
+        <span class="material-symbols-outlined">
+          {{ drawer.opened ? 'clinical_notes' : 'patient_list' }}
+        </span>
+        Informacoes paciente
+      </span>
+    </div>
+    <div class="column">
+      <mat-card class="column-card" style="padding: 16px;">        
+        <mat-form-field class="example-full-width" appearance="fill">
+          <mat-label>Identificador paciente</mat-label>
+          <input matInput [(ngModel)]="patientId" name="patientId">
+        </mat-form-field>
+
+        <mat-form-field class="example-full-width" appearance="fill">
+          <mat-label>Nome paciente</mat-label>
+          <input matInput [(ngModel)]="patientName" name="patientName">
+        </mat-form-field>
+      </mat-card>
+    </div>
+  </mat-drawer>
+
+  <mat-drawer-content class="analysis-grid-content">
+    
+    <div class="toggle-button-container">
+      <button mat-mini-fab color="primary" (click)="drawer.toggle()" matTooltip="Alternar Painel do Paciente">
+        <span class="material-symbols-outlined">
+          {{ drawer.opened ? 'clinical_notes' : 'patient_list' }}
+        </span>
+      </button>
+
+      <button mat-raised-button color="primary" (click)="fileInput.click()">
+        <span>Selecionar imagem</span>
+        <mat-icon>add_photo_alternate</mat-icon>
+      </button>
+              <input
+          #fileInput
+          type="file"
+          accept="image/*"
+          style="display: none"
+          (click)="fileInput.value = ''"
+          (change)="fileChangeEvent($event)"
+        />
+        <button mat-raised-button color="primary" (click)="onTrainModel()">
+          Treinar modelo
+        </button>
+    </div>
+
+    <div class="analysis-main-layout">
+      
+      <div class="column column-main">
+
+        <ng-container *ngIf="stage == 'analysis'">
+          <mat-card class="column-card" style="display: flex; flex-direction: column; gap: 16px;">
+            <span class="patient-title">
+              <span class="material-symbols-outlined">
+                scan
+              </span>
+              Escanear mamografia
+            </span>
+
+            <div style="padding: 16px">
+
+            
+            <div [id]="imageCardId || 'imagem'" class="image-preview-card">
+              <ng-container *ngIf="imageChangedEvent; else emptyMessage">
+                <image-cropper
+                    [imageChangedEvent]="imageChangedEvent"
+                    [maintainAspectRatio]="true"
+                    [aspectRatio]="4 / 3"
+                    format="png"
+                    (imageCropped)="imageCropped($event)"
+                    (imageLoaded)="imageLoaded($event)"
+                    (cropperReady)="cropperReady()"
+                    (loadImageFailed)="loadImageFailed()"
+                ></image-cropper>
+                <img style="max-width: 300px;" [src]="croppedImage" />
+              </ng-container>
+              <ng-template #emptyMessage>
+                <div class="empty-placeholder">Nenhuma imagem adicionada</div>
+              </ng-template>
+            </div>
+
+            <div style="display: grid; margin-top: 8px;">
+            <ng-container *ngIf="!loading; else loadingBlock">
+              <button mat-raised-button (click)="onAnalyze()" [disabled]="!selectedFile">
+                Analisar imagem
+              </button>
+            </ng-container>
+            <ng-template #loadingBlock>
+              <div class="analysis-loading">
+                <mat-progress-spinner diameter="28" mode="indeterminate" strokeWidth="4"></mat-progress-spinner>
+                <span>{{ loadingMessage }}</span>
+              </div>
+            </ng-template>
+
+            <label style="display:inline-flex;align-items:center;gap:8px;margin-left:12px;">
+              <input type="checkbox" [checked]="useMock" (change)="useMock = $event.target.checked" />
+              <span>Usar mock</span>
+            </label>
+            </div>
+
+            </div>
+          </mat-card>
+        </ng-container>
+
+        <ng-container *ngIf="stage == 'result'">
+            <div class="analysis-result-row">
+              <mat-card id="result" class="llm-report-card result-card">
+                <div class="llm-report-header">
+                  <div class="material-symbols-outlined">health_metrics</div>
+                  <div class="llm-report-title">Métricas</div>
+                </div>
+                <ng-container *ngIf="result; else noMetrics">
+                  <div style="padding: 24px;">
+                    <div class="result-row">
+                      <div class="result-label">
+                        <span class="material-symbols-outlined result-icon">square_foot</span>
+                        Área
+                      </div>
+                      <div class="result-value">{{ result.area }}</div>
+                    </div>
+                    <div class="result-row">
+                      <div class="result-label">
+                        <span class="material-symbols-outlined result-icon">timeline</span>
+                        Perímetro
+                      </div>
+                      <div class="result-value">{{ result.perimeter }}</div>
+                    </div>
+                    <div class="result-row">
+                      <div class="result-label">
+                        <span class="material-symbols-outlined result-icon">bubble_chart</span>
+                        Circularidade
+                      </div>
+                      <div class="result-value">{{ result.circularity }}</div>
+                    </div>
+                    <div class="result-row">
+                      <div class="result-label">
+                        <span class="material-symbols-outlined result-icon">shield</span>
+                        Solidez
+                      </div>
+                      <div class="result-value">{{ result.solidity }}</div>
+                    </div>
+                  </div>
+                </ng-container>
+                <ng-template #noMetrics>
+                  <p class="muted" style="padding: 24px;">Nenhum resultado disponível ainda.</p>
+                </ng-template>
+              </mat-card>
+
+              <mat-card class="llm-report-card">
+                <div class="llm-report-header">
+                  <div class="material-symbols-outlined">stars_2</div>
+                  <div class="llm-report-title">Relatório feito por IA</div>
+                </div>
+                <div class="llm-report-content">
+                  <ng-container *ngIf="loading">
+                    <p class="loading-text">IA está pensando... analisando a imagem e gerando o relatório.</p>
+                  </ng-container>
+                  <ng-container *ngIf="!loading">
+                    <ng-container *ngIf="result?.patient_data?.llm_explanation; else noExplanation">
+                      <markdown class="variable-binding" [data]="result?.patient_data?.llm_explanation"></markdown>
+                    </ng-container>
+                  </ng-container>
+                  <ng-template #noExplanation>
+                    <p class="muted">Explicação da LLM será exibida aqui após o processamento.</p>
+                  </ng-template>
+                </div>
+              </mat-card>
+            </div>
+
+            <div class="analysis-action-row">
+              <button mat-raised-button (click)="onConfirmSample()">
+                Armazenar análise
+              </button>
+            </div>
+            
+          </ng-container>
+
+      </div>
+
+    </div>
+  </mat-drawer-content>
+</mat-drawer-container>
