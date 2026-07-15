@@ -37,6 +37,7 @@ export class AnalysisComponent {
   croppedImage: SafeUrl  = '';
 
   selectedFile: File | null = null;
+  croppedFile: File | null = null;
   patientName = '';
   patientId = '';
   imagePreviewUrl: string | null = null;
@@ -74,7 +75,9 @@ export class AnalysisComponent {
   }
 
   onAnalyze(): void {
-    if (!this.selectedFile) return;
+    const fileToSend = this.croppedFile ?? this.selectedFile;
+
+    if (!fileToSend) return;
     
     this.loading = true;
     this.loadingMessage = 'IA está analisando...';
@@ -93,8 +96,8 @@ export class AnalysisComponent {
     }, 1800);
 
     const obs = this.useMock
-      ? this.patientService.analyzeImageMock(this.selectedFile!, this.patientName, this.patientId)
-      : this.patientService.analyzeImage(this.selectedFile!, this.patientName, this.patientId);
+      ? this.patientService.analyzeImageMock(fileToSend, this.patientName, this.patientId)
+      : this.patientService.analyzeImage(fileToSend, this.patientName, this.patientId);
 
     obs
       .pipe(
@@ -121,6 +124,9 @@ export class AnalysisComponent {
 
   clear(): void {
     this.selectedFile = null;
+    this.croppedFile = null;
+    this.croppedImage = '';
+    this.imageChangedEvent = null;
     this.result = null;
     this.error = null;
   }
@@ -130,6 +136,8 @@ export class AnalysisComponent {
     const file = input.files && input.files[0] ? input.files[0] : null;
 
     this.selectedFile = file;
+    this.croppedFile = null;
+    this.croppedImage = '';
     this.imageChangedEvent = event;
     this.result = null;
     this.error = null;
@@ -139,8 +147,31 @@ export class AnalysisComponent {
 
   imageCropped(event: ImageCroppedEvent) {
     this.croppedImage = this.sanitizer.bypassSecurityTrustUrl(event.objectUrl || '');
-    this.croppedImage
-    // event.blob can be used to upload the cropped image
+
+    if (event.blob) {
+      const fileName = this.selectedFile?.name ?? 'imagem-cropada.png';
+      this.croppedFile = new File([event.blob], fileName, {
+        type: event.blob.type || 'image/png',
+      });
+      return;
+    }
+
+    if (event.base64) {
+      const fileName = this.selectedFile?.name ?? 'imagem-cropada.png';
+      const blob = this.base64ToBlob(event.base64, 'image/png');
+      this.croppedFile = new File([blob], fileName, { type: 'image/png' });
+      return;
+    }
+
+    this.croppedFile = null;
+  }
+
+  private base64ToBlob(base64: string, type = 'image/png'): Blob {
+    const cleanBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
+    const byteCharacters = atob(cleanBase64);
+    const byteNumbers = Array.from(byteCharacters, (char) => char.charCodeAt(0));
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type });
   }
 
   imageLoaded(image: LoadedImage) {
