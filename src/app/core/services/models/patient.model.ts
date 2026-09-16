@@ -51,3 +51,15 @@ export interface TrainModelResponse {
     f1_score: number;
   };
 }
+
+export interface AssistantResponse {
+  response: string;
+  sources: string[];
+  disclaimer: string;
+  session_id: string;
+}
+
+export interface AssistantMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}

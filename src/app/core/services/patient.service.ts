@@ -8,6 +8,7 @@ import {
   AnalysisResponse,
   ConfirmSampleResponse,
   TrainModelResponse,
+  AssistantResponse,
 } from './models/patient.model';
 import { ErrorHandler } from './error.handler';
 import { patient_data } from '../mocks/patient_data';
@@ -56,6 +57,28 @@ export class PatientService {
       catchError((err) => {
         const apiError = ErrorHandler.handle(err);
         console.error('[PatientService] trainModel error:', apiError);
+        return throwError(() => apiError);
+      })
+    );
+  }
+
+  chatWithAssistant(
+    patientId: string,
+    query: string,
+    sessionId: string
+  ): Observable<AssistantResponse> {
+    return this.http.post<AssistantResponse>(
+      `${this.baseEndpoint}/assistant/chat`,
+      {
+        patient_id: patientId,
+        query,
+        session_id: sessionId,
+      }
+    ).pipe(
+      tap((res) => console.log('[PatientService] assistant chat', res)),
+      catchError((err) => {
+        const apiError = ErrorHandler.handle(err);
+        console.error('[PatientService] assistant chat error:', apiError);
         return throwError(() => apiError);
       })
     );

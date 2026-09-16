@@ -1,21 +1,17 @@
 <mat-drawer-container class="analysis-grid-container" style="margin-top: 24px;" autosize>
-  
   <mat-drawer #drawer class="column-side-drawer" mode="side" opened="true">
     <div style="width: 100%;">
       <span class="patient-title">
-        <span class="material-symbols-outlined">
-          {{ drawer.opened ? 'clinical_notes' : 'patient_list' }}
-        </span>
+        <span class="material-symbols-outlined">{{ drawer.opened ? 'clinical_notes' : 'patient_list' }}</span>
         Informacoes paciente
       </span>
     </div>
     <div class="column">
-      <mat-card class="column-card" style="padding: 16px;">        
+      <mat-card class="column-card" style="padding: 16px;">
         <mat-form-field class="example-full-width" appearance="fill">
           <mat-label>Identificador paciente</mat-label>
           <input matInput [(ngModel)]="patientId" name="patientId">
         </mat-form-field>
-
         <mat-form-field class="example-full-width" appearance="fill">
           <mat-label>Nome paciente</mat-label>
           <input matInput [(ngModel)]="patientName" name="patientName">
@@ -25,164 +21,97 @@
   </mat-drawer>
 
   <mat-drawer-content class="analysis-grid-content">
-    
     <div class="toggle-button-container">
       <button mat-mini-fab color="primary" (click)="drawer.toggle()" matTooltip="Alternar Painel do Paciente">
-        <span class="material-symbols-outlined">
-          {{ drawer.opened ? 'clinical_notes' : 'patient_list' }}
-        </span>
+        <span class="material-symbols-outlined">{{ drawer.opened ? 'clinical_notes' : 'patient_list' }}</span>
       </button>
-
       <button mat-raised-button color="primary" (click)="fileInput.click()">
-        <span>Selecionar imagem</span>
-        <mat-icon>add_photo_alternate</mat-icon>
+        <span>Selecionar imagem</span><mat-icon>add_photo_alternate</mat-icon>
       </button>
-              <input
-          #fileInput
-          type="file"
-          accept="image/*"
-          style="display: none"
-          (click)="fileInput.value = ''"
-          (change)="fileChangeEvent($event)"
-        />
-        <button mat-raised-button color="primary" (click)="onTrainModel()">
-          Treinar modelo
-        </button>
+      <input #fileInput type="file" accept="image/*" style="display: none" (click)="fileInput.value = ''" (change)="fileChangeEvent($event)" />
+      <button mat-raised-button color="primary" (click)="onTrainModel()">Treinar modelo</button>
     </div>
 
     <div class="analysis-main-layout">
-      
       <div class="column column-main">
-
         <ng-container *ngIf="stage == 'analysis'">
           <mat-card class="column-card" style="display: flex; flex-direction: column; gap: 16px;">
-            <span class="patient-title">
-              <span class="material-symbols-outlined">
-                scan
-              </span>
-              Escanear mamografia
-            </span>
-
+            <span class="patient-title"><span class="material-symbols-outlined">scan</span>Escanear mamografia</span>
             <div style="padding: 16px">
-
-            
-            <div [id]="imageCardId || 'imagem'" class="image-preview-card">
-              <ng-container *ngIf="imageChangedEvent; else emptyMessage">
-                <image-cropper
-                    [imageChangedEvent]="imageChangedEvent"
-                    [maintainAspectRatio]="true"
-                    [aspectRatio]="4 / 3"
-                    format="png"
-                    (imageCropped)="imageCropped($event)"
-                    (imageLoaded)="imageLoaded($event)"
-                    (cropperReady)="cropperReady()"
-                    (loadImageFailed)="loadImageFailed()"
-                ></image-cropper>
-                <img style="max-width: 300px;" [src]="croppedImage" />
-              </ng-container>
-              <ng-template #emptyMessage>
-                <div class="empty-placeholder">Nenhuma imagem adicionada</div>
-              </ng-template>
-            </div>
-
-            <div style="display: grid; margin-top: 8px;">
-            <ng-container *ngIf="!loading; else loadingBlock">
-              <button mat-raised-button (click)="onAnalyze()" [disabled]="!selectedFile">
-                Analisar imagem
-              </button>
-            </ng-container>
-            <ng-template #loadingBlock>
-              <div class="analysis-loading">
-                <mat-progress-spinner diameter="28" mode="indeterminate" strokeWidth="4"></mat-progress-spinner>
-                <span>{{ loadingMessage }}</span>
+              <div [id]="imageCardId || 'imagem'" class="image-preview-card">
+                <ng-container *ngIf="imageChangedEvent; else emptyMessage">
+                  <image-cropper [imageChangedEvent]="imageChangedEvent" [maintainAspectRatio]="true" [aspectRatio]="4 / 3" format="png" (imageCropped)="imageCropped($event)" (imageLoaded)="imageLoaded($event)" (cropperReady)="cropperReady()" (loadImageFailed)="loadImageFailed()"></image-cropper>
+                  <img style="max-width: 300px;" [src]="croppedImage" />
+                </ng-container>
+                <ng-template #emptyMessage><div class="empty-placeholder">Nenhuma imagem adicionada</div></ng-template>
               </div>
-            </ng-template>
-
-            <label style="display:inline-flex;align-items:center;gap:8px;margin-left:12px;">
-              <input type="checkbox" [checked]="useMock" (change)="useMock = $event.target.checked" />
-              <span>Usar mock</span>
-            </label>
-            </div>
-
+              <div style="display: grid; margin-top: 8px;">
+                <ng-container *ngIf="!loading; else loadingBlock">
+                  <button mat-raised-button (click)="onAnalyze()" [disabled]="!selectedFile">Analisar imagem</button>
+                </ng-container>
+                <ng-template #loadingBlock>
+                  <div class="analysis-loading"><mat-progress-spinner diameter="28" mode="indeterminate" strokeWidth="4"></mat-progress-spinner><span>{{ loadingMessage }}</span></div>
+                </ng-template>
+                <label style="display:inline-flex;align-items:center;gap:8px;margin-left:12px;"><input type="checkbox" [checked]="useMock" (change)="useMock = $event.target.checked" /><span>Usar mock</span></label>
+              </div>
             </div>
           </mat-card>
         </ng-container>
 
         <ng-container *ngIf="stage == 'result'">
-            <div class="analysis-result-row">
-              <mat-card id="result" class="llm-report-card result-card">
-                <div class="llm-report-header">
-                  <div class="material-symbols-outlined">health_metrics</div>
-                  <div class="llm-report-title">Métricas</div>
+          <div class="analysis-result-row">
+            <mat-card id="result" class="llm-report-card result-card">
+              <div class="llm-report-header"><div class="material-symbols-outlined">health_metrics</div><div class="llm-report-title">Métricas</div></div>
+              <ng-container *ngIf="result; else noMetrics">
+                <div style="padding: 24px;">
+                  <div class="result-row"><div class="result-label"><span class="material-symbols-outlined result-icon">square_foot</span>Área</div><div class="result-value">{{ result.area }}</div></div>
+                  <div class="result-row"><div class="result-label"><span class="material-symbols-outlined result-icon">timeline</span>Perímetro</div><div class="result-value">{{ result.perimeter }}</div></div>
+                  <div class="result-row"><div class="result-label"><span class="material-symbols-outlined result-icon">bubble_chart</span>Circularidade</div><div class="result-value">{{ result.circularity }}</div></div>
+                  <div class="result-row"><div class="result-label"><span class="material-symbols-outlined result-icon">shield</span>Solidez</div><div class="result-value">{{ result.solidity }}</div></div>
                 </div>
-                <ng-container *ngIf="result; else noMetrics">
-                  <div style="padding: 24px;">
-                    <div class="result-row">
-                      <div class="result-label">
-                        <span class="material-symbols-outlined result-icon">square_foot</span>
-                        Área
-                      </div>
-                      <div class="result-value">{{ result.area }}</div>
-                    </div>
-                    <div class="result-row">
-                      <div class="result-label">
-                        <span class="material-symbols-outlined result-icon">timeline</span>
-                        Perímetro
-                      </div>
-                      <div class="result-value">{{ result.perimeter }}</div>
-                    </div>
-                    <div class="result-row">
-                      <div class="result-label">
-                        <span class="material-symbols-outlined result-icon">bubble_chart</span>
-                        Circularidade
-                      </div>
-                      <div class="result-value">{{ result.circularity }}</div>
-                    </div>
-                    <div class="result-row">
-                      <div class="result-label">
-                        <span class="material-symbols-outlined result-icon">shield</span>
-                        Solidez
-                      </div>
-                      <div class="result-value">{{ result.solidity }}</div>
-                    </div>
-                  </div>
+              </ng-container>
+              <ng-template #noMetrics><p class="muted" style="padding: 24px;">Nenhum resultado disponível ainda.</p></ng-template>
+            </mat-card>
+            <mat-card class="llm-report-card">
+              <div class="llm-report-header"><div class="material-symbols-outlined">stars_2</div><div class="llm-report-title">Relatório feito por IA</div></div>
+              <div class="llm-report-content">
+                <ng-container *ngIf="loading"><p class="loading-text">IA está pensando... analisando a imagem e gerando o relatório.</p></ng-container>
+                <ng-container *ngIf="!loading">
+                  <ng-container *ngIf="result?.patient_data?.llm_explanation; else noExplanation"><markdown class="variable-binding" [data]="result?.patient_data?.llm_explanation"></markdown></ng-container>
                 </ng-container>
-                <ng-template #noMetrics>
-                  <p class="muted" style="padding: 24px;">Nenhum resultado disponível ainda.</p>
-                </ng-template>
-              </mat-card>
-
-              <mat-card class="llm-report-card">
-                <div class="llm-report-header">
-                  <div class="material-symbols-outlined">stars_2</div>
-                  <div class="llm-report-title">Relatório feito por IA</div>
-                </div>
-                <div class="llm-report-content">
-                  <ng-container *ngIf="loading">
-                    <p class="loading-text">IA está pensando... analisando a imagem e gerando o relatório.</p>
-                  </ng-container>
-                  <ng-container *ngIf="!loading">
-                    <ng-container *ngIf="result?.patient_data?.llm_explanation; else noExplanation">
-                      <markdown class="variable-binding" [data]="result?.patient_data?.llm_explanation"></markdown>
-                    </ng-container>
-                  </ng-container>
-                  <ng-template #noExplanation>
-                    <p class="muted">Explicação da LLM será exibida aqui após o processamento.</p>
-                  </ng-template>
-                </div>
-              </mat-card>
-            </div>
-
-            <div class="analysis-action-row">
-              <button mat-raised-button (click)="onConfirmSample()">
-                Armazenar análise
-              </button>
-            </div>
-            
-          </ng-container>
-
+                <ng-template #noExplanation><p class="muted">Explicação da LLM será exibida aqui após o processamento.</p></ng-template>
+              </div>
+            </mat-card>
+          </div>
+          <div class="analysis-action-row"><button mat-raised-button (click)="onConfirmSample()">Armazenar análise</button></div>
+        </ng-container>
       </div>
-
     </div>
   </mat-drawer-content>
 </mat-drawer-container>
+
+<button *ngIf="!assistantOpen" mat-fab color="primary" class="assistant-fab" type="button" (click)="toggleAssistant()" aria-label="Abrir assistente médico" matTooltip="Abrir assistente médico"><mat-icon>forum</mat-icon></button>
+
+<mat-card class="assistant-card" *ngIf="assistantOpen">
+  <div class="llm-report-header assistant-header">
+    <div class="assistant-header-content"><div class="material-symbols-outlined">forum</div><div class="llm-report-title">Assistente médico</div></div>
+    <button mat-icon-button type="button" (click)="toggleAssistant()" aria-label="Fechar assistente médico" matTooltip="Fechar"><mat-icon>close</mat-icon></button>
+  </div>
+  <div class="assistant-content">
+    <p class="assistant-intro">Consulte o histórico e os protocolos disponíveis para apoiar a revisão desta análise.</p>
+    <div class="assistant-messages" *ngIf="assistantMessages.length; else assistantEmpty">
+      <div class="assistant-message" *ngFor="let message of assistantMessages" [class.assistant-message-user]="message.role === 'user'" [class.assistant-message-bot]="message.role === 'assistant'">
+        <span class="assistant-message-label">{{ message.role === 'user' ? 'Você' : 'Assistente' }}</span><markdown [data]="message.content"></markdown>
+      </div>
+    </div>
+    <ng-template #assistantEmpty><p class="assistant-empty">Faça uma pergunta sobre o histórico ou os protocolos relevantes.</p></ng-template>
+    <div class="assistant-composer">
+      <mat-form-field appearance="outline" class="assistant-input"><mat-label>Pergunte ao assistente</mat-label><textarea matInput rows="2" [(ngModel)]="assistantQuery" (keydown)="onAssistantKeydown($event)" [disabled]="assistantLoading"></textarea></mat-form-field>
+      <button mat-raised-button color="primary" type="button" (click)="onAskAssistant()" [disabled]="assistantLoading || !assistantQuery.trim() || !patientId.trim()"><mat-icon>{{ assistantLoading ? 'hourglass_top' : 'send' }}</mat-icon>{{ assistantLoading ? 'Consultando' : 'Enviar' }}</button>
+    </div>
+    <mat-progress-spinner *ngIf="assistantLoading" class="assistant-spinner" diameter="24" mode="indeterminate"></mat-progress-spinner>
+    <p class="assistant-error" *ngIf="assistantError">{{ assistantError }}</p>
+    <div class="assistant-sources" *ngIf="assistantSources.length"><strong>Fontes consultadas</strong><ul><li *ngFor="let source of assistantSources">{{ source }}</li></ul></div>
+    <p class="assistant-disclaimer">{{ assistantDisclaimer }}</p>
+  </div>
+</mat-card>
