@@ -238,4 +238,197 @@ h2 {
   margin-bottom: 0.75rem;
 }
 
+/* ==========================================================================
+   5. ASSISTENTE MÉDICO (widget flutuante)
+   ========================================================================== */
 
+.assistant-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 999;
+  box-shadow: 0 10px 24px rgba(122, 85, 255, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.assistant-fab:hover {
+  transform: scale(1.05);
+}
+
+.assistant-card {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000;
+  width: min(420px, calc(100vw - 32px));
+  height: min(640px, calc(100vh - 48px));
+  padding: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(122, 85, 255, 0.22);
+}
+
+.assistant-header {
+  flex: 0 0 auto;
+  justify-content: space-between;
+}
+
+.assistant-header-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Área abaixo do cabeçalho: única região com scroll é .assistant-messages,
+   o resto (intro, composer, fontes, disclaimer) permanece sempre visível. */
+.assistant-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 14px;
+  padding: 16px 18px;
+  overflow: hidden;
+}
+
+.assistant-intro,
+.assistant-empty {
+  margin: 0;
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  color: #6b6b76;
+  line-height: 1.5;
+}
+
+.assistant-messages {
+  flex: 1;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.assistant-message {
+  max-width: 86%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  line-height: 1.5;
+  color: #2e2e2e;
+  font-size: 0.92rem;
+}
+
+.assistant-message ::ng-deep p {
+  margin: 0 0 6px;
+}
+
+.assistant-message ::ng-deep p:last-child {
+  margin-bottom: 0;
+}
+
+.assistant-message-user {
+  align-self: flex-end;
+  background: #eee9ff;
+  border-radius: 14px 14px 4px 14px;
+}
+
+.assistant-message-bot {
+  align-self: flex-start;
+  background: #f4f6f8;
+  border-radius: 14px 14px 14px 4px;
+}
+
+.assistant-message-label {
+  display: block;
+  margin-bottom: 4px;
+  color: #6b4ee6;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.assistant-composer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.assistant-input {
+  flex: 1;
+}
+
+.assistant-input ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+.assistant-composer button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.assistant-spinner {
+  align-self: center;
+  margin: 2px 0;
+}
+
+.assistant-error {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(179, 38, 30, 0.08);
+  color: #b3261e;
+  font-size: 0.85rem;
+}
+
+.assistant-sources {
+  flex: 0 0 auto;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 0.8rem;
+  color: #5c5c66;
+}
+
+.assistant-sources strong {
+  color: #6b4ee6;
+}
+
+.assistant-sources ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.assistant-sources li {
+  margin-bottom: 4px;
+}
+
+.assistant-disclaimer {
+  flex: 0 0 auto;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 0.72rem;
+  font-style: italic;
+  font-weight: 400;
+  color: #8a8a93;
+}
+
+@media (max-width: 480px) {
+  .assistant-card {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    width: auto;
+    height: min(75vh, calc(100vh - 24px));
+  }
+
+  .assistant-fab {
+    right: 16px;
+    bottom: 16px;
+  }
+}

@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PatientService } from '../../core/services/patient.service';
-import { AnalysisResponse } from '../../core/services/models/patient.model';
+import {
+  AnalysisResponse,
+  AssistantMessage,
+} from '../../core/services/models/patient.model';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -44,9 +47,18 @@ export class AnalysisComponent {
   imageCardId = '';
   loading = false;
   loadingMessage = 'IA está analisando...';
-  useMock = true;
+  useMock = false;
   result: AnalysisResponse | null = null;
   error: any = null;
+
+  assistantSessionId = this.createSessionId();
+  assistantQuery = '';
+  assistantLoading = false;
+  assistantError = '';
+  assistantMessages: AssistantMessage[] = [];
+  assistantSources: string[] = [];
+  assistantDisclaimer = 'Sugestão de IA para auxílio médico. Validação humana obrigatória.';
+  assistantOpen = false;
 
   stage: 'analysis' | 'result' | 'error' = 'analysis';
 
@@ -74,6 +86,52 @@ export class AnalysisComponent {
     });
   }
 
+  onAskAssistant(): void {
+    const query = this.assistantQuery.trim();
+
+    if (!query || !this.patientId.trim() || this.assistantLoading) {
+      return;
+    }
+
+    this.assistantMessages.push({ role: 'user', content: query });
+    this.assistantQuery = '';
+    this.assistantLoading = true;
+    this.assistantError = '';
+
+    this.patientService
+      .chatWithAssistant(this.patientId, query, this.assistantSessionId)
+      .pipe(
+        finalize(() => {
+          this.assistantLoading = false;
+          this.cd.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.assistantMessages.push({
+            role: 'assistant',
+            content: response.response,
+          });
+          this.assistantSources = response.sources;
+          this.assistantDisclaimer = response.disclaimer;
+        },
+        error: () => {
+          this.assistantError = 'Não foi possível obter uma resposta do assistente.';
+        },
+      });
+  }
+
+  toggleAssistant(): void {
+    this.assistantOpen = !this.assistantOpen;
+  }
+
+    onAssistantKeydown(event: KeyboardEvent): void {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        this.onAskAssistant();
+      }
+    }
+
   onAnalyze(): void {
     const fileToSend = this.croppedFile ?? this.selectedFile;
 
@@ -83,6 +141,7 @@ export class AnalysisComponent {
     this.loadingMessage = 'IA está analisando...';
     this.result = null;
     this.error = null;
+    this.resetAssistant();
 
     if (this.preparingTimeout) {
       window.clearTimeout(this.preparingTimeout);
@@ -142,7 +201,23 @@ export class AnalysisComponent {
     this.result = null;
     this.error = null;
     this.stage = 'analysis';
+    this.resetAssistant();
     this.cd.detectChanges();
+  }
+
+  private resetAssistant(): void {
+    this.assistantSessionId = this.createSessionId();
+    this.assistantQuery = '';
+    this.assistantLoading = false;
+    this.assistantError = '';
+    this.assistantMessages = [];
+    this.assistantSources = [];
+    this.assistantDisclaimer = 'Sugestão de IA para auxílio médico. Validação humana obrigatória.';
+    this.assistantOpen = false;
+  }
+
+  private createSessionId(): string {
+    return globalThis.crypto?.randomUUID?.() ?? `session-${Date.now()}`;
   }
 
   imageCropped(event: ImageCroppedEvent) {
