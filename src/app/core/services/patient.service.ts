@@ -9,6 +9,12 @@ import {
   ConfirmSampleResponse,
   TrainModelResponse,
   AssistantResponse,
+  AudioAnalysisResponse,
+  VideoAnalysisResponse,
+  AlertRecord,
+  AlertStatusUpdate,
+  PrescriptionCompareRequest,
+  PrescriptionCompareResponse,
 } from './models/patient.model';
 import { ErrorHandler } from './error.handler';
 import { patient_data } from '../mocks/patient_data';
@@ -28,6 +34,95 @@ export class PatientService {
     formData.append('patient_id', patientId);
 
       return this.http.post<AnalysisResponse>(`${this.baseEndpoint}/analyze`, formData);
+  }
+
+  analyzeAudio(
+    file: File,
+    patientId: string,
+    isSynthetic = false
+  ): Observable<AudioAnalysisResponse> {
+    const formData = new FormData();
+    formData.append('patient_id', patientId);
+    formData.append('audio_file', file, file.name);
+    formData.append('is_synthetic', String(isSynthetic));
+
+    return this.http.post<AudioAnalysisResponse>(
+      `${this.baseEndpoint}/audio/analyze`,
+      formData
+    ).pipe(
+      catchError((err) => {
+        const apiError = ErrorHandler.handle(err);
+        console.error('[PatientService] audio analysis error:', apiError);
+        return throwError(() => apiError);
+      })
+    );
+  }
+
+  analyzeVideo(
+    file: File,
+    patientId: string,
+    isSynthetic = false
+  ): Observable<VideoAnalysisResponse> {
+    const formData = new FormData();
+    formData.append('patient_id', patientId);
+    formData.append('file', file, file.name);
+    formData.append('is_synthetic', String(isSynthetic));
+
+    return this.http
+      .post<VideoAnalysisResponse>(`${this.baseEndpoint}/video/analyze`, formData)
+      .pipe(
+        catchError((err) => {
+          const apiError = ErrorHandler.handle(err);
+          console.error('[PatientService] video analysis error:', apiError);
+          return throwError(() => apiError);
+        })
+      );
+  }
+
+  comparePrescriptions(
+      payload: PrescriptionCompareRequest
+  ): Observable<PrescriptionCompareResponse> {
+      return this.http
+        .post<PrescriptionCompareResponse>(
+          `${this.baseEndpoint}/prescriptions/compare`,
+          payload
+        )
+        .pipe(
+          catchError((err) => {
+            const apiError = ErrorHandler.handle(err);
+            console.error('[PatientService] prescription comparison error:', apiError);
+            return throwError(() => apiError);
+          })
+        );
+  }
+
+  getActiveAlerts(patientId: string): Observable<AlertRecord[]> {
+    return this.http
+      .get<AlertRecord[]>(`${this.baseEndpoint}/alerts/active`, {
+        params: { patient_id: patientId },
+      })
+      .pipe(
+        catchError((err) => {
+          const apiError = ErrorHandler.handle(err);
+          console.error('[PatientService] active alerts error:', apiError);
+          return throwError(() => apiError);
+        })
+      );
+  }
+
+  updateAlertStatus(alertId: string, status: AlertStatusUpdate): Observable<AlertRecord> {
+    return this.http
+      .patch<AlertRecord>(
+        `${this.baseEndpoint}/alerts/${encodeURIComponent(alertId)}/status`,
+        { status }
+      )
+      .pipe(
+        catchError((err) => {
+          const apiError = ErrorHandler.handle(err);
+          console.error('[PatientService] alert status update error:', apiError);
+          return throwError(() => apiError);
+        })
+      );
   }
 
     /**

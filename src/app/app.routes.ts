@@ -4,5 +4,9 @@ export const routes: Routes = [
 	{
 		path: '',
 		loadComponent: () => import('./features/analysis/analysis.component').then(m => m.AnalysisComponent)
+	},
+	{
+		path: 'alerts',
+		loadComponent: () => import('./features/alerts/alerts.component').then(m => m.AlertsComponent)
 	}
 ];

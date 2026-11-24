@@ -13,6 +13,8 @@ Uma aplicação web de análise de imagens médicas utilizada para processamento
 - ✅ Explicações geradas por LLM para diagnósticos
 - ✅ Scores de risco (sem risco, risco moderado, risco alto)
 - ✅ Confirmação de amostras e treinamento de modelos
+- ✅ Consulta e atualização de estado de alertas demonstrativos
+- ✅ Análise local demonstrativa de elevação bilateral dos braços em vídeo
 - ✅ Design responsivo com Angular Material 21
 
 ---
@@ -53,10 +55,14 @@ src/
 │   │           └── api-response.model.ts   # Interfaces de resposta API
 │   │
 │   ├── features/
-│   │   └── analysis/
+│   │   ├── analysis/
 │   │       ├── analysis.component.ts       # Componente principal de análise
 │   │       ├── analysis.component.html     # Template de análise
 │   │       └── analysis.component.scss     # Estilos do componente
+│   │   └── alerts/
+│   │       ├── alerts.component.ts         # Consulta manual e ações de alertas
+│   │       ├── alerts.component.html       # Central de alertas
+│   │       └── alerts.component.scss       # Estilos da central
 │   │
 │   └── core/
 │       └── mocks/
@@ -107,23 +113,41 @@ Dockerfile                                  # Containerização (build + nginx)
 #### **2. PatientService** (`src/app/core/services/patient.service.ts`)
 - `analyzeImage()` - Envia imagem para análise no backend
 - `analyzeImageMock()` - Simula resposta da API (teste local)
+- `analyzeAudio()` - Envia áudio para transcrição e análise textual no backend
+- `analyzeVideo()` - Envia vídeo curto para análise geométrica demonstrativa de pose
+- `getActiveAlerts()` e `updateAlertStatus()` - Consultam e atualizam alertas no backend
 - `confirmSample()` - Confirma amostra no backend
 - `trainModel()` - Treina modelo no backend
 
 #### **3. AnalysisComponent** (`src/app/features/analysis/analysis.component.ts`)
 - Upload de imagens
+- Upload e análise textual de áudio
+- Upload e análise de movimento em vídeo
 - Recorte de imagens (ImageCropper)
 - Análise com modo mock/real
 - Exibição de resultados
 - Confirmação de amostras
 - Treinamento de modelos
 
-#### **4. Models** (`src/app/core/services/models/`)
+#### **4. AlertsComponent** (`src/app/features/alerts/alerts.component.ts`)
+- Rota `/alerts`, acessível pela navegação principal
+- Consulta alertas ativos por `patient_id` quando solicitada pelo usuário
+- Permite reconhecer alertas ativos e encerrar alertas reconhecidos
+- Exibe modalidade, regra, evidências e indicação de dados sintéticos
+
+#### **5. Models** (`src/app/core/services/models/`)
 Interfaces TypeScript para tipagem:
 - `PatientData` - Dados básicos do paciente
 - `PatientDiagnosticModel` - Dados de diagnóstico com scores
 - `AnalysisResponse` - Resposta da análise com explicação LLM
 - `ConfirmSampleResponse`, `TrainModelResponse` - Respostas do backend
+- `AlertRecord` - Alerta persistido, incluindo origem, evidência e estado
+
+Na rota `/alerts`, informe o identificador do paciente para consultar a API. A tela usa apenas os endpoints já existentes (`GET /alerts/active` e `PATCH /alerts/{alert_id}/status`); a criação continua restrita aos módulos do backend. Utilize somente dados sintéticos, pois a API ainda não implementa autenticação/autorização.
+
+Na análise de áudio, marque a opção de amostra sintética somente quando essa origem for conhecida. Menções afirmativas encontradas no texto geram um alerta demonstrativo no backend, visível na rota `/alerts`; negações e sentimento negativo isolado não criam alerta.
+
+Na análise de vídeo, informe o mesmo identificador de paciente usado na Central de Alertas, selecione um MP4/AVI de até 20 MiB e 10 segundos e envie um clipe filmado de frente, com o corpo inteiro visível, durante a elevação bilateral dos braços. O backend usa MediaPipe Pose Landmarker Lite localmente, amostra até 10 quadros e apresenta ângulos geométricos; o limiar de 80° serve apenas à demonstração, não é clínico. Um alerta `REVIEW` é criado quando algum dos lados fica abaixo desse limiar. Marque a amostra como sintética apenas se o vídeo for comprovadamente sintético. Para carregar o modelo e iniciar a API, siga os passos do README de `image-process-api`; a rota retorna erro explícito se o modelo não estiver instalado.
 
 ---
 
@@ -266,17 +290,42 @@ FormData fields:
 **URL**: `http://localhost:8000/model`  
 **Body**: `{}` (json vazio)
 
+### Endpoint de Análise de Áudio
+
+Na tela principal, informe o identificador do paciente, selecione **Selecionar áudio** e envie um arquivo WAV, MP3 ou OGG (até 25 MB). O frontend chama `POST http://localhost:8000/audio/analyze` com `multipart/form-data`:
+
+```text
+patient_id: identificador do paciente
+audio_file: arquivo de áudio
+```
+
+A interface exibe a transcrição, sintomas mencionados no texto, sentimento e alertas retornados pelo backend. Essa etapa não analisa características acústicas da voz nem estabelece diagnóstico. Para usar o serviço, o backend deve estar configurado com as credenciais Azure documentadas no README do `image-process-api`.
+
+### Endpoint de Análise de Vídeo
+
+Na tela principal, informe o identificador do paciente, selecione **Selecionar vídeo** e envie um clipe MP4 ou AVI (até 20 MiB e 10 segundos). O frontend chama `POST http://localhost:8000/video/analyze` com `multipart/form-data`:
+
+```text
+patient_id: identificador do paciente
+file: vídeo
+is_synthetic: true ou false
+```
+
+O resultado mostra o número de quadros analisados, os ângulos máximos medidos por lado, eventos abaixo do limiar demonstrativo e alertas criados. Para consultar o alerta posteriormente, abra `/alerts` e repita a consulta sob demanda para o mesmo `patient_id`. Vídeos e quadros não são persistidos. A ausência de pose suficiente produz um erro em vez de um resultado normal. Esta análise não é validada clinicamente.
+
 ---
 
 ## 🧪 Modo Mock/Simulado
 
-Para testar a aplicação sem backend:
+Para simular somente a análise de imagens sem backend:
 
-1. A aplicação já vem configurada com `useMock = true` no `AnalysisComponent`
+1. Altere `useMock` para `true` no `AnalysisComponent` (o padrão atual é `false`)
 2. Dados mock estão em `src/app/core/mocks/patient_data.ts`
 3. O serviço retorna respostas com delay de 800ms para simular latência
 
-Para ativar o backend real, altere em `src/app/features/analysis/analysis.component.ts`:
+Áudio e vídeo usam endpoints reais mesmo quando `useMock` está ativado; para esses fluxos, inicie a API e configure as credenciais Azure exigidas para áudio.
+
+Para alternar o modo de análise de imagens, edite `src/app/features/analysis/analysis.component.ts`:
 
 ```typescript
 // Linha ~46

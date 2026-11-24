@@ -1,4 +1,8 @@
 .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
     background: linear-gradient(
     135deg,
     #7d5eff 0%,
@@ -6,4 +10,32 @@
     padding: 12px;
     color: white;
     font-weight: bold;
+}
+
+.header h3 {
+    margin: 0;
+}
+
+.header nav {
+    display: flex;
+    gap: 8px;
+}
+
+.header nav a {
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+}
+
+.header nav a:hover,
+.header nav a.current {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 520px) {
+    .header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }

@@ -3,5 +3,9 @@
         <span class="material-symbols-outlined">coronavirus</span>
         AI Medical Image Analysis
     </h3>
+    <nav aria-label="Navegação principal">
+        <a routerLink="/" routerLinkActive="current" [routerLinkActiveOptions]="{ exact: true }">Análise</a>
+        <a routerLink="/alerts" routerLinkActive="current">Alertas</a>
+    </nav>
 </div>
 <router-outlet />

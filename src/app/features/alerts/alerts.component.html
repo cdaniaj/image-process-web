@@ -1,0 +1,116 @@
+<main class="alerts-page">
+  <section class="alerts-heading">
+    <div>
+      <p class="eyebrow">Acompanhamento demonstrativo</p>
+      <h1>Central de alertas</h1>
+      <p class="intro">
+        Consulte e atualize os alertas associados a um paciente. Os eventos não
+        representam diagnóstico nem avaliação de urgência clínica.
+      </p>
+    </div>
+    <span class="synthetic-note">Use somente dados sintéticos</span>
+  </section>
+
+  <form class="patient-search" (ngSubmit)="searchAlerts()">
+    <label for="patient-id">Identificador do paciente</label>
+    <div class="search-controls">
+      <input
+        id="patient-id"
+        name="patientId"
+        type="text"
+        [(ngModel)]="patientId"
+        maxlength="128"
+        autocomplete="off"
+        required
+        placeholder="Ex.: SYNTHETIC-001"
+      />
+      <button type="submit" [disabled]="!patientId.trim() || loading">
+        {{ loading && !loaded ? 'Consultando...' : 'Consultar alertas' }}
+      </button>
+      <button
+        class="secondary-button"
+        type="button"
+        (click)="refreshAlerts()"
+        [disabled]="!activePatientId || loading"
+      >
+        {{ loading && loaded ? 'Atualizando...' : 'Atualizar lista' }}
+      </button>
+    </div>
+  </form>
+
+  <p class="query-status-note" *ngIf="activePatientId">
+    A lista só é consultada quando você solicita uma consulta ou atualização.
+    <span *ngIf="lastUpdatedAt"> · Última consulta: {{ lastUpdatedAt | date: 'shortTime' }}</span>
+  </p>
+
+  <div class="error-message" role="alert" *ngIf="error">{{ error }}</div>
+
+  <section class="alerts-list" aria-live="polite">
+    <div class="loading-state" *ngIf="loading && !loaded" role="status">
+      Consultando alertas...
+    </div>
+
+    <div class="empty-state" *ngIf="loaded && alerts.length === 0">
+      Nenhum alerta ativo para {{ activePatientId }}.
+    </div>
+
+    <article class="alert-card" *ngFor="let alert of alerts">
+      <div class="alert-topline">
+        <div class="badges">
+          <span class="severity-badge" [class.review]="alert.severity === 'REVIEW'">
+            {{ alert.severity }}
+          </span>
+          <span class="status-badge" [attr.data-status]="alert.status">
+            {{ alert.status === 'active' ? 'Ativo' : 'Reconhecido' }}
+          </span>
+          <span class="synthetic-badge" *ngIf="alert.is_synthetic">Sintético</span>
+        </div>
+        <time [attr.datetime]="alert.occurred_at">{{ alert.occurred_at | date: 'medium' }}</time>
+      </div>
+
+      <h2>{{ alert.event_type }}</h2>
+      <p class="alert-message">{{ alert.message }}</p>
+
+      <dl class="alert-metadata">
+        <div>
+          <dt>Origem</dt>
+          <dd>{{ alert.source_modality }}</dd>
+        </div>
+        <div>
+          <dt>Regra</dt>
+          <dd>{{ alert.rule_id }}</dd>
+        </div>
+        <div>
+          <dt>Paciente</dt>
+          <dd>{{ alert.patient_id }}</dd>
+        </div>
+      </dl>
+
+      <details *ngIf="alert.evidence && (alert.evidence | json) !== '{}'">
+        <summary>Ver evidências</summary>
+        <pre>{{ alert.evidence | json }}</pre>
+      </details>
+
+      <div class="alert-actions">
+        <button
+          *ngIf="alert.status === 'active'"
+          type="button"
+          (click)="updateStatus(alert, 'acknowledged')"
+          [disabled]="updatingAlertIds.has(alert.alert_id)"
+        >
+          Reconhecer
+        </button>
+        <button
+          *ngIf="alert.status === 'acknowledged'"
+          class="close-button"
+          type="button"
+          (click)="updateStatus(alert, 'closed')"
+          [disabled]="updatingAlertIds.has(alert.alert_id)"
+        >
+          Encerrar
+        </button>
+        <span *ngIf="updatingAlertIds.has(alert.alert_id)" role="status">Salvando...</span>
+      </div>
+    </article>
+  </section>
+</main>

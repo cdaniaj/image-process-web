@@ -34,6 +34,235 @@
 
     <div class="analysis-main-layout">
       <div class="column column-main">
+        <mat-card class="column-card audio-analysis-card">
+          <span class="patient-title"><span class="material-symbols-outlined">graphic_eq</span>Análise de áudio</span>
+          <div class="audio-analysis-content">
+            <p class="audio-analysis-intro">Envie uma gravação de consulta para transcrever a fala e analisar o texto com apoio de IA.</p>
+            <label class="audio-synthetic-option">
+              <input
+                type="checkbox"
+                name="audioIsSynthetic"
+                [(ngModel)]="audioIsSynthetic"
+                [disabled]="audioLoading"
+              />
+              Esta gravação é uma amostra sintética
+            </label>
+            <div class="audio-analysis-controls">
+              <button mat-stroked-button type="button" (click)="audioInput.click()" [disabled]="audioLoading">
+                <mat-icon>audio_file</mat-icon>
+                Selecionar áudio
+              </button>
+              <input
+                #audioInput
+                type="file"
+                accept=".wav,.mp3,.ogg,audio/wav,audio/mpeg,audio/ogg"
+                hidden
+                (change)="onAudioFileChange($event)"
+              />
+              <span class="audio-file-name" *ngIf="audioFile">{{ audioFile.name }}</span>
+              <button
+                mat-raised-button
+                color="primary"
+                type="button"
+                (click)="onAnalyzeAudio()"
+                [disabled]="!audioFile || !patientId.trim() || audioLoading"
+              >
+                {{ audioLoading ? 'Analisando áudio...' : 'Analisar áudio' }}
+              </button>
+            </div>
+            <p class="audio-help">WAV, MP3 ou OGG · máximo 25 MB · informe o identificador do paciente.</p>
+            <div class="audio-error" *ngIf="audioError" role="alert">{{ audioError }}</div>
+            <div class="audio-loading" *ngIf="audioLoading" role="status">
+              <mat-progress-spinner diameter="24" mode="indeterminate" strokeWidth="4"></mat-progress-spinner>
+              <span>Transcrevendo e analisando o texto...</span>
+            </div>
+
+            <section class="audio-result" *ngIf="audioAnalysis as analysis" aria-live="polite">
+              <div class="audio-result-section">
+                <h3>Transcrição</h3>
+                <p class="audio-transcription">{{ analysis.transcription }}</p>
+              </div>
+              <div class="audio-result-section">
+                <h3>Termos e sintomas mencionados</h3>
+                <p *ngIf="!analysis.detected_symptoms.length" class="muted">Nenhum termo sintomático identificado no texto.</p>
+                <ul *ngIf="analysis.detected_symptoms.length" class="audio-symptoms">
+                  <li *ngFor="let symptom of analysis.detected_symptoms">{{ symptom }}</li>
+                </ul>
+              </div>
+              <div class="audio-result-section">
+                <h3>Sentimento do texto</h3>
+                <p class="audio-sentiment">
+                  {{ analysis.sentiment_analysis.overall === 'negative' ? 'Negativo' : analysis.sentiment_analysis.overall === 'positive' ? 'Positivo' : 'Neutro' }}
+                  <span>
+                    Positivo {{ analysis.sentiment_analysis.confidence_scores.positive | percent:'1.0-0' }} ·
+                    Neutro {{ analysis.sentiment_analysis.confidence_scores.neutral | percent:'1.0-0' }} ·
+                    Negativo {{ analysis.sentiment_analysis.confidence_scores.negative | percent:'1.0-0' }}
+                  </span>
+                </p>
+              </div>
+              <div class="audio-alerts" *ngIf="analysis.clinical_alerts.length" role="status">
+                <h3>Sinais para revisão profissional</h3>
+                <ul>
+                  <li *ngFor="let alert of analysis.clinical_alerts">{{ alert }}</li>
+                </ul>
+              </div>
+              <p class="audio-alert-persistence" *ngIf="analysis.alerts_created.length" role="status">
+                {{ analysis.alerts_created.length }} alerta(s) demonstrativo(s) salvo(s) na Central de Alertas.
+              </p>
+              <p class="audio-disclaimer">{{ analysis.disclaimer }}</p>
+              <p class="audio-limitation">A análise considera o texto transcrito; não avalia características acústicas da voz nem estabelece diagnóstico.</p>
+            </section>
+          </div>
+        </mat-card>
+
+        <mat-card class="column-card audio-analysis-card">
+          <span class="patient-title"><span class="material-symbols-outlined">videocam</span>Análise de movimento em vídeo</span>
+          <div class="audio-analysis-content">
+            <p class="audio-analysis-intro">
+              Envie um clipe curto, de frente, executando uma elevação bilateral dos braços até a altura dos ombros.
+              A análise mede um ângulo geométrico demonstrativo; não é avaliação clínica.
+            </p>
+            <label class="audio-synthetic-option">
+              <input
+                type="checkbox"
+                name="videoIsSynthetic"
+                [(ngModel)]="videoIsSynthetic"
+                [disabled]="videoLoading"
+              />
+              Este vídeo é uma amostra sintética
+            </label>
+            <div class="audio-analysis-controls">
+              <button mat-stroked-button type="button" (click)="videoInput.click()" [disabled]="videoLoading">
+                <mat-icon>video_file</mat-icon>
+                Selecionar vídeo
+              </button>
+              <input
+                #videoInput
+                type="file"
+                accept=".mp4,.avi,video/mp4,video/x-msvideo"
+                hidden
+                (change)="onVideoFileChange($event)"
+              />
+              <span class="audio-file-name" *ngIf="videoFile">{{ videoFile.name }}</span>
+              <button
+                mat-raised-button
+                color="primary"
+                type="button"
+                (click)="onAnalyzeVideo()"
+                [disabled]="!videoFile || !patientId.trim() || videoLoading"
+              >
+                {{ videoLoading ? 'Analisando vídeo...' : 'Analisar movimento' }}
+              </button>
+            </div>
+            <p class="audio-help">MP4 ou AVI · máximo 20 MiB e 10 segundos · corpo inteiro visível · câmera de frente.</p>
+            <div class="audio-error" *ngIf="videoError" role="alert">{{ videoError }}</div>
+            <div class="audio-loading" *ngIf="videoLoading" role="status">
+              <mat-progress-spinner diameter="24" mode="indeterminate" strokeWidth="4"></mat-progress-spinner>
+              <span>Detectando pose nos quadros amostrados...</span>
+            </div>
+
+            <section class="audio-result" *ngIf="videoAnalysis as analysis" aria-live="polite">
+              <div class="video-result-summary">
+                <h3>Resultado demonstrativo</h3>
+                <p>{{ analysis.report_summary }}</p>
+                <p>
+                  Quadros analisados: {{ analysis.frames_analyzed }} · poses válidas: {{ analysis.pose_frames }}
+                  · desvio geométrico: {{ analysis.deviation_score | percent:'1.0-0' }}
+                </p>
+                <p>
+                  Elevação máxima: braço esquerdo {{ analysis.maximum_elevation_deg.left | number:'1.0-1' }}°;
+                  braço direito {{ analysis.maximum_elevation_deg.right | number:'1.0-1' }}°.
+                  Limiar demonstrativo: {{ analysis.arm_elevation_threshold_deg }}°.
+                </p>
+              </div>
+              <div class="audio-alert-persistence" *ngIf="analysis.alerts_created.length" role="status">
+                {{ analysis.alerts_created.length }} alerta(s) demonstrativo(s) salvo(s) na Central de Alertas.
+              </div>
+              <details *ngIf="analysis.events.length">
+                <summary>Ver desvios amostrados</summary>
+                <ul>
+                  <li *ngFor="let event of analysis.events">
+                    {{ event.side === 'left' ? 'Esquerdo' : 'Direito' }}:
+                    {{ event.measured_elevation_deg | number:'1.0-1' }}° em {{ event.timestamp_sec | number:'1.0-1' }} s
+                    (limiar {{ event.threshold_deg }}°).
+                  </li>
+                </ul>
+              </details>
+              <p class="audio-limitation">
+                Resultado geométrico de uma demonstração; não diagnostica condição, risco ou necessidade de tratamento.
+              </p>
+            </section>
+          </div>
+        </mat-card>
+
+        <mat-card class="column-card audio-analysis-card">
+          <span class="patient-title"><span class="material-symbols-outlined">medication</span>Comparação de prescrições</span>
+          <div class="audio-analysis-content">
+            <p class="audio-analysis-intro">
+              Compare dois registros de exemplo para visualizar medicamentos adicionados, removidos ou alterados.
+              Os dados são sintéticos e não representam uma avaliação clínica.
+            </p>
+            <div class="prescription-snapshots">
+              <section>
+                <h3>Registro anterior</h3>
+                <ul>
+                  <li *ngFor="let item of previousPrescription">
+                    {{ item.medication }} — {{ item.dose }}, {{ item.route }}, {{ item.frequency }}
+                  </li>
+                </ul>
+              </section>
+              <section>
+                <h3>Registro atual</h3>
+                <ul>
+                  <li *ngFor="let item of currentPrescription">
+                    {{ item.medication }} — {{ item.dose }}, {{ item.route }}, {{ item.frequency }}
+                  </li>
+                </ul>
+              </section>
+            </div>
+            <div class="audio-analysis-controls">
+              <button
+                mat-raised-button
+                color="primary"
+                type="button"
+                (click)="onComparePrescriptions()"
+                [disabled]="!patientId.trim() || prescriptionLoading"
+              >
+                {{ prescriptionLoading ? 'Comparando registros...' : 'Comparar exemplo sintético' }}
+              </button>
+              <span class="audio-help">Paciente: {{ patientId || 'informe o identificador ao lado' }}</span>
+            </div>
+            <div class="audio-error" *ngIf="prescriptionError" role="alert">{{ prescriptionError }}</div>
+            <div class="audio-loading" *ngIf="prescriptionLoading" role="status">
+              <mat-progress-spinner diameter="24" mode="indeterminate" strokeWidth="4"></mat-progress-spinner>
+              <span>Comparando os registros de exemplo...</span>
+            </div>
+            <section
+              class="audio-result"
+              *ngIf="prescriptionComparison as comparison"
+              aria-live="polite"
+            >
+              <div class="video-result-summary">
+                <h3>{{ comparison.changes_detected ? 'Diferenças encontradas' : 'Nenhuma diferença encontrada' }}</h3>
+                <ul *ngIf="comparison.changes.length">
+                  <li *ngFor="let change of comparison.changes">
+                    {{ change.type === 'added' ? 'Adicionado' : change.type === 'removed' ? 'Removido' : 'Alterado' }}:
+                    {{ change.medication }}
+                    <span *ngIf="change.type === 'modified'"> ({{ change.changed_fields.join(', ') }})</span>
+                  </li>
+                </ul>
+                <p>{{ comparison.explanation }}</p>
+              </div>
+              <p class="audio-alert-persistence" *ngIf="comparison.alerts_created.length" role="status">
+                Alerta demonstrativo salvo na Central de Alertas.
+              </p>
+              <p class="audio-limitation">
+                A comparação registra diferenças entre os exemplos; não determina se uma alteração é adequada.
+              </p>
+            </section>
+          </div>
+        </mat-card>
+
         <ng-container *ngIf="stage == 'analysis'">
           <mat-card class="column-card" style="display: flex; flex-direction: column; gap: 16px;">
             <span class="patient-title"><span class="material-symbols-outlined">scan</span>Escanear mamografia</span>
